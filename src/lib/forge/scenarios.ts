@@ -344,4 +344,4 @@ export function getScenarios(): Scenario[] {
   return cache;
 }
 
-export const ALL_VENUES = Object.values(VENUES);
+export const ALL_VENUES: Venue[] = Object.values(VENUES);
