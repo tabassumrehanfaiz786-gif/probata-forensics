@@ -260,7 +260,7 @@ export function detectSpoof(s: Scenario, cfg: DetectionSettings): Detection {
     const oppFrac = filled.length ? oppFills.length / filled.length : 0;
     const dominantSide = largeCancelled.filter((o) => o.side === "ask").length >= largeCancelled.length / 2 ? "ask" : "bid";
     const factors = [
-      factor("ctf", "Cancel-to-fill ratio", 20, (ctf - 5) / 45, `${ctf.toFixed(1)} : 1`, "Ratio of cancelled to filled orders. Market makers routinely cancel, so this factor alone is weak; full weight at ≥50:1."),
+      factor("ctf", "Cancel-to-fill ratio", 20, (ctf - 3) / 27, `${ctf.toFixed(1)} : 1`, "Ratio of cancelled to filled orders. Market makers routinely cancel, so this factor alone is weak; scoring starts above 3:1 and reaches full weight at ≥30:1."),
       factor("life", "Short life of large orders", 25, largeCancelled.length ? 1 - (life / cfg.spoof.maxLifetimeMs) * 0.6 : 0, largeCancelled.length ? `${fmtNum(life)} ms median` : "No large cancelled orders", `Median resting time of cancelled orders ≥${cfg.spoof.sizeMultiple}× venue median size. Zero if above ${fmtNum(cfg.spoof.maxLifetimeMs)} ms.`),
       factor("size", "Large orders relative to book", 20, largeShare / 0.6, pct(largeShare), `Share of the account's orders at ≥${cfg.spoof.sizeMultiple}× the venue median order size (${fmtNum(venueMedian)} ${s.base}).`),
       factor("opp", "Opposite-side execution while resting", 35, oppFrac / 0.8, pct(oppFrac), "Share of the account's fills that executed on the opposite side while its own large order was resting — the core economic signature of spoofing. Full weight at ≥80%."),
@@ -431,10 +431,13 @@ export function detectPump(s: Scenario, cfg: DetectionSettings): Detection {
   };
 }
 
+/** Rule-based evidence never establishes certainty, so published scores are capped. */
+export const CONFIDENCE_CAP = 97;
+
 export function runDetector(s: Scenario, cfg: DetectionSettings): Detection {
-  if (s.detector === "wash_trading") return detectWash(s, cfg);
-  if (s.detector === "spoofing") return detectSpoof(s, cfg);
-  return detectPump(s, cfg);
+  const d = s.detector === "wash_trading" ? detectWash(s, cfg) : s.detector === "spoofing" ? detectSpoof(s, cfg) : detectPump(s, cfg);
+  const confidence = Math.min(CONFIDENCE_CAP, d.confidence);
+  return { ...d, confidence, suppressed: confidence < cfg.minConfidence };
 }
 
 export function confidenceBand(c: number): "critical" | "high" | "moderate" | "low" {

@@ -231,14 +231,21 @@ function spoof(seed: number, o: {
     for (let c = 0; c < o.cycles; c++) {
       const ts = Math.floor(between(r, start + 2 * MIN, end - 2 * MIN));
       const m = midAt(ts);
-      const layers = int(r, 1, 3);
+      const layers = int(r, 2, 5);
+      const flickers = int(r, 2, 4);
       const life = int(r, o.lifeMs[0], o.lifeMs[1]);
-      for (let l = 0; l < layers; l++) {
-        const px = m * (1 + (o.spoofSide === "ask" ? 1 : -1) * (0.0012 + l * 0.0008));
-        push(subject, o.spoofSide, ts + l * 40, px, medianSize * between(r, o.spoofMult[0], o.spoofMult[1]), "cancel", life);
+      // layered orders are placed, pulled and re-placed ("flickering") several times per cycle
+      for (let f = 0; f < flickers; f++) {
+        const t0 = ts + f * (life + int(r, 40, 400));
+        for (let l = 0; l < layers; l++) {
+          const px = m * (1 + (o.spoofSide === "ask" ? 1 : -1) * (0.0012 + l * 0.0008));
+          push(subject, o.spoofSide, t0 + l * 40, px, medianSize * between(r, o.spoofMult[0], o.spoofMult[1]), "cancel", life);
+        }
       }
-      const fts = ts + Math.floor(life * between(r, 0.3, 0.85));
-      push(subject, opp, ts + 60, m * (1 + (opp === "ask" ? 1 : -1) * 0.0003), logn(r, medianSize * 1.3, 0.3), "fill", fts - ts - 60);
+      if (r() < 0.7) {
+        const fts = ts + Math.floor(life * between(r, 0.3, 0.85));
+        push(subject, opp, ts + 60, m * (1 + (opp === "ask" ? 1 : -1) * 0.0003), logn(r, medianSize * 1.3, 0.3), "fill", fts - ts - 60);
+      }
     }
     for (let i = 0; i < 6; i++) {
       const ts = Math.floor(between(r, start, end - 30_000));
