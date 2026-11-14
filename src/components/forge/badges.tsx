@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { confidenceBand } from "@/lib/forge/detection";
 import { PATTERN_CODE, PATTERN_LABEL, STATUS_LABEL } from "@/lib/forge/format";
 import type { CaseStatus, PatternType } from "@/lib/forge/types";
@@ -42,7 +44,7 @@ export function StatusBadge({ status }: { status: CaseStatus }) {
   return <span className={cn("inline-flex items-center rounded border px-2 py-0.5 text-[11px] font-medium", STATUS_STYLE[status])}>{STATUS_LABEL[status]}</span>;
 }
 
-export function Panel({ title, action, children, className, bodyClassName }: { title?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; className?: string; bodyClassName?: string }) {
+export function Panel({ title, action, children, className, bodyClassName }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClassName?: string }) {
   return (
     <section className={cn("rounded-md border border-border bg-card", className)}>
       {title && (
