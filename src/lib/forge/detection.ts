@@ -4,6 +4,7 @@
  * the minimum confidence are kept but suppressed, never silently discarded.
  */
 import { fmtCompact, fmtNum, fmtTs, pct, shortAddr } from "./format";
+import { rawMetrics } from "./types";
 import type {
   Cluster, Detection, DetectionSettings, EvidenceRecord, Metric, Scenario, ScoreFactor,
   SeriesPoint, TimelineEvent, Trade, WalletEdge, WalletNode,
@@ -20,7 +21,7 @@ const median = (xs: number[]) => {
   if (!xs.length) return 0;
   const s = [...xs].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
 };
 const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
 const factor = (key: string, label: string, weight: number, unit: number, observed: string, rationale: string): ScoreFactor => ({
@@ -32,17 +33,17 @@ function buildSeries(s: Scenario, binMs: number, flagged: (t: Trade) => boolean)
   const out: SeriesPoint[] = [];
   let last = s.trades[0]?.price ?? 0;
   let j = 0;
-  const trades = s.trades;
+  const trades: Trade[] = s.trades;
   for (let i = 0; i < n; i++) {
     const t0 = s.start + i * binMs;
     const t1 = t0 + binMs;
     let vol = 0;
     let fl = 0;
-    while (j < trades.length && trades[j].ts < t1) {
-      if (trades[j].ts >= t0) {
-        vol += trades[j].size;
-        if (flagged(trades[j])) fl += trades[j].size;
-        last = trades[j].price;
+    while (j < trades.length && trades[j]!.ts < t1) {
+      if (trades[j]!.ts >= t0) {
+        vol += trades[j]!.size;
+        if (flagged(trades[j]!)) fl += trades[j]!.size;
+        last = trades[j]!.price;
       }
       j++;
     }
@@ -137,10 +138,10 @@ export function detectWash(s: Scenario, cfg: DetectionSettings): Detection {
     const legs = ct.filter((t) => !(set.has(t.buyer) && set.has(t.seller))).map((t) => ({ t, side: set.has(t.buyer) ? "buy" : "sell", used: false }));
     const pairs: [Trade, Trade][] = [];
     for (let i = 0; i < legs.length; i++) {
-      const a = legs[i];
+      const a = legs[i]!;
       if (a.used) continue;
       for (let j = i + 1; j < legs.length; j++) {
-        const b = legs[j];
+        const b = legs[j]!;
         if (b.t.ts - a.t.ts > maxDt) break;
         if (b.used || b.side === a.side) continue;
         if (Math.abs(b.t.size - a.t.size) / Math.max(a.t.size, b.t.size) <= tol) {
@@ -177,7 +178,7 @@ export function detectWash(s: Scenario, cfg: DetectionSettings): Detection {
     return { c, ct, cross, pairs, clusterVol, matchedVol, matchedRatio, netRatio, venueShare, nPairs, factors, confidence: Math.round(confidence), limitations, linked };
   };
 
-  const best = candidates.map(evaluate).sort((a, b) => b.confidence - a.confidence)[0];
+  const best = candidates.map(evaluate).sort((a, b) => b.confidence - a.confidence)[0]!;
   const flaggedTrades = [...best.cross, ...best.pairs.flat()].sort((a, b) => a.ts - b.ts);
   const wStart = flaggedTrades[0]?.ts ?? s.start;
   const wEnd = flaggedTrades.at(-1)?.ts ?? s.end;
@@ -193,7 +194,7 @@ export function detectWash(s: Scenario, cfg: DetectionSettings): Detection {
   if (first) timeline.push({ ts: first.ts, kind: "trade", label: "First matched trade", detail: `${fmtCompact(first.size)} ${s.base} @ ${first.price.toPrecision(5)} between ${shortAddr(first.seller)} → ${shortAddr(first.buyer)}`, ref: first.ref });
   if (best.cross[0]) timeline.push({ ts: best.cross[0].ts, kind: "trade", label: "First self-crossed trade", detail: `Both sides controlled by the cluster (${shortAddr(best.cross[0].seller)} → ${shortAddr(best.cross[0].buyer)})`, ref: best.cross[0].ref });
   if (best.pairs[0]) {
-    const [a, b] = best.pairs[0];
+    const [a, b] = best.pairs[0]!;
     timeline.push({ ts: b.ts, kind: "trade", label: "Round-trip completed", detail: `Opposite leg ${Math.round((b.ts - a.ts) / 1000)}s later, size difference ${pct(Math.abs(b.size - a.size) / a.size, 2)}`, ref: b.ref });
   }
   if (last) timeline.push({ ts: last.ts, kind: "trade", label: "Last matched trade", detail: `${best.nPairs} matched pairs in total`, ref: last.ref });
@@ -221,7 +222,7 @@ export function detectWash(s: Scenario, cfg: DetectionSettings): Detection {
     suppressed: best.confidence < cfg.minConfidence,
     window: { start: wStart, end: wEnd }, venue: s.venue, pair: s.pair,
     wallets: best.c.wallets, clusters, metrics,
-    raw: { pairs: best.nPairs, cross: best.cross.length, roundTrips: best.pairs.length, matchedRatio: best.matchedRatio, netRatio: best.netRatio, venueShare: best.venueShare, clusterSize: best.c.wallets.length, matchedVol: best.matchedVol, priceDrift, linked: best.linked ? 1 : 0 },
+    raw: rawMetrics({ pairs: best.nPairs, cross: best.cross.length, roundTrips: best.pairs.length, matchedRatio: best.matchedRatio, netRatio: best.netRatio, venueShare: best.venueShare, clusterSize: best.c.wallets.length, matchedVol: best.matchedVol, priceDrift, linked: best.linked ? 1 : 0 }),
     factors: best.factors, limitations, timeline,
     series: buildSeries(s, 5 * 60_000, (t) => flaggedIds.has(t.id)),
     graph: buildGraph(s, best.c.wallets, clusters),
@@ -265,7 +266,7 @@ export function detectSpoof(s: Scenario, cfg: DetectionSettings): Detection {
       factor("size", "Large orders relative to book", 20, largeShare / 0.6, pct(largeShare), `Share of the account's orders at ≥${cfg.spoof.sizeMultiple}× the venue median order size (${fmtNum(venueMedian)} ${s.base}).`),
       factor("opp", "Opposite-side execution while resting", 35, oppFrac / 0.8, pct(oppFrac), "Share of the account's fills that executed on the opposite side while its own large order was resting — the core economic signature of spoofing. Full weight at ≥80%."),
     ];
-    if (largeCancelled.length === 0 || life > cfg.spoof.maxLifetimeMs) factors[1].score = 0;
+    if (largeCancelled.length === 0 || life > cfg.spoof.maxLifetimeMs) factors[1]!.score = 0;
     let confidence = sum(factors.map((f) => f.score));
     const lim: string[] = [];
     if (os.length < cfg.spoof.minOrders) { confidence *= 0.5; lim.push(`Only ${os.length} orders (minimum ${cfg.spoof.minOrders}); score halved.`); }
@@ -275,7 +276,7 @@ export function detectSpoof(s: Scenario, cfg: DetectionSettings): Detection {
   const best = [...byAcct.entries()]
     .filter(([, os]) => os.length >= 5)
     .map(([a, os]) => evaluate(a, os))
-    .sort((a, b) => b.confidence - a.confidence)[0];
+    .sort((a, b) => b.confidence - a.confidence)[0]!;
 
   const lc = [...best.largeCancelled].sort((a, b) => a.placed - b.placed);
   const wStart = lc[0]?.placed ?? s.start;
@@ -291,7 +292,7 @@ export function detectSpoof(s: Scenario, cfg: DetectionSettings): Detection {
     timeline.push({ ts: o.end, kind: "order", label: `Large ${o.side} cancelled`, detail: `After ${fmtNum(o.end - o.placed)} ms, unfilled`, ref: o.id });
   }
   if (lc.length > 2) {
-    const mid = lc[Math.floor(lc.length / 2)];
+    const mid = lc[Math.floor(lc.length / 2)]!;
     timeline.push({ ts: mid.placed, kind: "order", label: "Pattern repeats", detail: `${lc.length} large cancelled orders across the window; ${best.oppFills.length} opposite-side fills`, ref: mid.id });
   }
   if (lc.at(-1)) timeline.push({ ts: lc.at(-1)!.end, kind: "order", label: "Last large order cancelled", detail: "No further layering activity observed", ref: lc.at(-1)!.id });
@@ -311,7 +312,7 @@ export function detectSpoof(s: Scenario, cfg: DetectionSettings): Detection {
     suppressed: best.confidence < cfg.minConfidence,
     window: { start: wStart, end: wEnd }, venue: s.venue, pair: s.pair,
     wallets: [best.account], clusters: [{ id: "A1", wallets: [best.account], basis: "Single venue account" }], metrics,
-    raw: { placed: best.os.length, cancelled: best.cancelled.length, filled: best.filled.length, ctf: best.ctf, life: best.life, largeShare: best.largeShare, oppFrac: best.oppFrac, largeCount: best.large.length, oppFills: best.oppFills.length, askSide: best.dominantSide === "ask" ? 1 : 0, venueMedian },
+    raw: rawMetrics({ placed: best.os.length, cancelled: best.cancelled.length, filled: best.filled.length, ctf: best.ctf, life: best.life, largeShare: best.largeShare, oppFrac: best.oppFrac, largeCount: best.large.length, oppFills: best.oppFills.length, askSide: best.dominantSide === "ask" ? 1 : 0, venueMedian }),
     factors: best.factors,
     limitations: [
       ...best.lim,
@@ -343,13 +344,13 @@ export function detectPump(s: Scenario, cfg: DetectionSettings): Detection {
   const sd = Math.sqrt(sum(baseline.map((v) => (v - mu) ** 2)) / Math.max(1, baseline.length)) || 1;
   const z = series.map((p) => (p.volume - mu) / sd);
   let peak = 0;
-  z.forEach((v, i) => { if (v > z[peak]) peak = i; });
+  z.forEach((v, i) => { if (v > z[peak]!) peak = i; });
   let a = peak, b = peak;
-  while (a > 0 && z[a - 1] >= cfg.pump.zThreshold / 2) a--;
-  while (b < z.length - 1 && z[b + 1] >= cfg.pump.zThreshold / 2) b++;
-  const wStart = series[a].t;
-  const wEnd = series[b].t + binMs;
-  const open = series[Math.max(0, a - 1)].price;
+  while (a > 0 && z[a - 1]! >= cfg.pump.zThreshold / 2) a--;
+  while (b < z.length - 1 && z[b + 1]! >= cfg.pump.zThreshold / 2) b++;
+  const wStart = series[a]!.t;
+  const wEnd = series[b]!.t + binMs;
+  const open = series[Math.max(0, a - 1)]!.price;
   const maxPrice = Math.max(...series.slice(a, Math.min(series.length, b + 10)).map((p) => p.price));
   const priceChange = open ? maxPrice / open - 1 : 0;
 
@@ -374,7 +375,7 @@ export function detectPump(s: Scenario, cfg: DetectionSettings): Detection {
   const dumpRatio = bought ? sold / bought : 0;
 
   const factors = [
-    factor("z", "Abnormal volume (z-score)", 15, z[peak] / (cfg.pump.zThreshold * 2), `z = ${z[peak].toFixed(1)}`, `Peak 1-minute volume against the preceding 60-minute baseline. Full weight at z ≥ ${cfg.pump.zThreshold * 2}.`),
+    factor("z", "Abnormal volume (z-score)", 15, z[peak]! / (cfg.pump.zThreshold * 2), `z = ${z[peak]!.toFixed(1)}`, `Peak 1-minute volume against the preceding 60-minute baseline. Full weight at z ≥ ${cfg.pump.zThreshold * 2}.`),
     factor("price", "Price dislocation", 10, priceChange / 0.3, pct(priceChange), "Maximum price rise from the pre-spike close. Full weight at ≥30%."),
     factor("conc", "Buy-side concentration", 20, (topShare - 0.3) / 0.5, pct(topShare), "Share of in-window buy volume from the top 10 wallets. Organic rallies tend to be broad-based; full weight at ≥80%."),
     factor("funding", "Shared funding among top buyers", 20, fundingFrac / 0.6, bestCluster ? `${bestCluster.n} of ${top.length} top buyers` : "None", "Top buyers funded from a common non-service address before the spike suggests coordination."),
@@ -387,7 +388,7 @@ export function detectPump(s: Scenario, cfg: DetectionSettings): Detection {
     ...s.funding.filter((f) => cohortSet.has(f.to)).map((f) => ({ ts: f.ts, kind: "funding" as const, label: "Cohort wallet funded", detail: `${fmtNum(f.amount, 2)} ${f.asset} from ${shortAddr(f.from)} → ${shortAddr(f.to)}`, ref: f.ref })),
     ...social.map((p) => ({ ts: p.ts, kind: "social" as const, label: `${p.channel} post by ${p.handle}`, detail: `“${p.text}” (reach ${fmtCompact(p.reach)})` })),
     { ts: wStart, kind: "price", label: "Volume spike begins", detail: `Volume z-score crosses ${(cfg.pump.zThreshold / 2).toFixed(1)}` },
-    { ts: series[peak].t, kind: "price", label: "Peak volume minute", detail: `z = ${z[peak].toFixed(1)}; price +${pct(priceChange)}` },
+    { ts: series[peak]!.t, kind: "price", label: "Peak volume minute", detail: `z = ${z[peak]!.toFixed(1)}; price +${pct(priceChange)}` },
   ];
   const dumps = s.trades.filter((t) => cohortSet.has(t.seller) && t.ts >= wEnd).sort((x, y) => x.ts - y.ts);
   if (dumps[0]) timeline.push({ ts: dumps[0].ts, kind: "trade", label: "Cohort begins selling", detail: `${shortAddr(dumps[0].seller)} sells ${fmtCompact(dumps[0].size)} ${s.base}`, ref: dumps[0].ref });
@@ -403,14 +404,14 @@ export function detectPump(s: Scenario, cfg: DetectionSettings): Detection {
     window: { start: wStart, end: wEnd }, venue: s.venue, pair: s.pair,
     wallets: cohort, clusters: clusterList,
     metrics: [
-      { label: "Peak volume z-score", value: z[peak].toFixed(1) },
+      { label: "Peak volume z-score", value: z[peak]!.toFixed(1) },
       { label: "Price change", value: `+${pct(priceChange)}` },
       { label: "Top-10 buyer share", value: pct(topShare) },
       { label: "Cohort size", value: `${cohort.length} wallets`, hint: bestCluster ? `${bestCluster.n} share a funder` : undefined },
       { label: "Cohort exit ratio", value: pct(dumpRatio), hint: `within ${cfg.pump.dumpLookaheadMin} min` },
       { label: "Social signals", value: String(social.length) },
     ],
-    raw: { z: z[peak], priceChange, topShare, fundingFrac, social: social.length, dumpRatio, cohort: cohort.length, windowMin: (wEnd - wStart) / 60_000 },
+    raw: rawMetrics({ z: z[peak]!, priceChange, topShare, fundingFrac, social: social.length, dumpRatio, cohort: cohort.length, windowMin: (wEnd - wStart) / 60_000 }),
     factors,
     limitations: [
       "Social signals are limited to monitored public channels; private group coordination is not observable.",
