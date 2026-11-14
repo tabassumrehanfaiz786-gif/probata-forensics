@@ -12,7 +12,7 @@ const MATRIX: Record<Permission, Role[]> = {
   edit_settings: ["admin"],
 };
 
-export const can = (role: Role, p: Permission) => MATRIX[role].includes(role) && MATRIX[p].includes(role);
+export const can = (role: Role, p: Permission) => MATRIX[p].includes(role);
 
 export function statusPermission(next: CaseStatus): Permission {
   if (next === "under_review") return "mark_under_review";
