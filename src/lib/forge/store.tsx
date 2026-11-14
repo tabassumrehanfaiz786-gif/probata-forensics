@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { ForgeContext } from "./context";
 import { CONFIDENCE_CAP, runDetector } from "./detection";
 import { buildEvidencePackage, type EvidencePackage } from "./evidence";
 import { STATUS_LABEL } from "./format";
@@ -49,7 +50,6 @@ interface Ctx {
   buildPackage: (caseRef: string) => Promise<EvidencePackage | null>;
 }
 
-const ForgeContext = createContext<Ctx | null>(null);
 
 export function ForgeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Persisted>(DEFAULT);
@@ -183,7 +183,7 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
 }
 
 export function useForge() {
-  const c = useContext(ForgeContext);
+  const c = useContext(ForgeContext) as Ctx | null;
   if (!c) throw new Error("useForge must be used inside ForgeProvider");
   return c;
 }
