@@ -10,14 +10,14 @@ const MIN = 60_000;
 const DAY = 86_400_000;
 const at = (d: number, h: number, m = 0) => Date.UTC(2026, 10, d, h, m, 0);
 
-const VENUES: Record<string, Venue> = {
+const VENUES = {
   binance: { id: "binance", name: "Binance", kind: "CEX", source: "Binance spot WebSocket (trades + depth)" },
   kraken: { id: "kraken", name: "Kraken", kind: "CEX", source: "Kraken WebSocket v2 (trade + book)" },
   coinbase: { id: "coinbase", name: "Coinbase Exchange", kind: "CEX", source: "Coinbase Advanced Trade WS" },
   uniEth: { id: "uniswap-v3-eth", name: "Uniswap v3", kind: "DEX", chain: "Ethereum", source: "Ethereum archive node (Swap logs)" },
   uniBase: { id: "uniswap-v3-base", name: "Uniswap v3", kind: "DEX", chain: "Base", source: "Base RPC (Swap logs)" },
   raydium: { id: "raydium", name: "Raydium CLMM", kind: "DEX", chain: "Solana", source: "Solana RPC (program logs)" },
-};
+} satisfies Record<string, Venue>;
 
 const evmAddr = (r: Rng) => "0x" + hex(r, 40);
 const solAddr = (r: Rng) => b58(r, 44);
@@ -78,7 +78,7 @@ function fundingFan(r: Rng, from: string, to: string[], when: number, asset: str
 }
 
 function base(id: string, caseRef: string, detector: PatternType, pair: string, venue: Venue, start: number, end: number, status: CaseStatus, assignee: string): Scenario {
-  const [b, q] = pair.split("/");
+  const [b = pair, q = ""] = pair.split("/");
   return { id, caseRef, detector, pair, base: b, quote: q, venue, start, end, trades: [], orders: [], funding: [], social: [], services: [], labels: {}, defaultStatus: status, assignee };
 }
 
@@ -198,8 +198,8 @@ function spoof(seed: number, o: {
   const secs = dur / 1000;
   const mid: number[] = new Array(secs + 1);
   mid[0] = o.p0;
-  for (let i = 1; i <= secs; i++) mid[i] = mid[i - 1] * Math.exp(0.00025 * gauss(r));
-  const midAt = (ts: number) => mid[Math.max(0, Math.min(secs, Math.floor((ts - start) / 1000)))];
+  for (let i = 1; i <= secs; i++) mid[i] = mid[i - 1]! * Math.exp(0.00025 * gauss(r));
+  const midAt = (ts: number): number => mid[Math.max(0, Math.min(secs, Math.floor((ts - start) / 1000)))]!;
 
   const orders: OrderEvent[] = [];
   let oid = 0;
