@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## EvidenceForge architecture
+- Detection, legal mapping and evidence packaging live in `src/lib/forge/` as pure functions over scenario records; UI only reads `useForge()` — keeps scoring explainable and testable.
+- Detection runs on a deterministic seeded replay dataset (`scenarios.ts`) so dataset hashes in evidence packages are reproducible; swap in live feeds behind the same `Scenario` shape.
+- Case status, narrative edits, role and audit log persist in browser storage for now; move to Lovable Cloud when real accounts are added.
