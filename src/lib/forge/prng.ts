@@ -22,7 +22,7 @@ export function gauss(rng: Rng): number {
 
 export const between = (rng: Rng, min: number, max: number) => min + rng() * (max - min);
 export const int = (rng: Rng, min: number, max: number) => Math.floor(between(rng, min, max + 1));
-export const pick = <T,>(rng: Rng, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length)];
+export const pick = <T,>(rng: Rng, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length)]!;
 export const logn = (rng: Rng, median: number, sigma: number) => median * Math.exp(sigma * gauss(rng));
 
 export function hex(rng: Rng, n: number): string {

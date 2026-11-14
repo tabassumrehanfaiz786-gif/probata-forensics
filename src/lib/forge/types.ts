@@ -7,7 +7,7 @@ export interface Venue {
   id: string;
   name: string;
   kind: VenueKind;
-  chain?: string;
+  chain?: string | undefined;
   source: string;
 }
 
@@ -64,7 +64,7 @@ export interface Scenario {
   orders: OrderEvent[];
   funding: FundingEdge[];
   social: SocialSignal[];
-  pool?: string;
+  pool?: string | undefined;
   /** Known service addresses (exchange hot wallets, bridges) excluded from clustering. */
   services: string[];
   labels: Record<string, string>;
@@ -84,7 +84,7 @@ export interface ScoreFactor {
 export interface Cluster {
   id: string;
   wallets: string[];
-  funder?: string;
+  funder?: string | undefined;
   basis: string;
 }
 
@@ -93,7 +93,7 @@ export interface TimelineEvent {
   kind: "trade" | "order" | "funding" | "social" | "detection" | "price";
   label: string;
   detail: string;
-  ref?: string;
+  ref?: string | undefined;
 }
 
 export interface SeriesPoint {
@@ -106,11 +106,11 @@ export interface SeriesPoint {
 export interface WalletNode {
   id: string;
   role: "subject" | "funder" | "counterparty" | "pool";
-  clusterId?: string;
+  clusterId?: string | undefined;
   buyVolume: number;
   sellVolume: number;
   tradeCount: number;
-  label?: string;
+  label?: string | undefined;
 }
 
 export interface WalletEdge {
@@ -127,15 +127,29 @@ export interface EvidenceRecord {
   type: string;
   from: string;
   to: string;
-  price?: number;
-  size?: number;
+  price?: number | undefined;
+  size?: number | undefined;
   note: string;
 }
 
 export interface Metric {
   label: string;
   value: string;
-  hint?: string;
+  hint?: string | undefined;
+}
+
+export const RAW_KEYS = [
+  "pairs", "cross", "roundTrips", "matchedRatio", "netRatio", "venueShare", "clusterSize", "matchedVol", "priceDrift", "linked",
+  "placed", "cancelled", "filled", "ctf", "life", "largeShare", "oppFrac", "largeCount", "oppFills", "askSide", "venueMedian",
+  "z", "priceChange", "topShare", "fundingFrac", "social", "dumpRatio", "cohort", "windowMin",
+] as const;
+export type RawKey = (typeof RAW_KEYS)[number];
+/** Numeric facts behind a detection; keys a detector does not use are 0. */
+export type RawMetrics = Record<RawKey, number>;
+export function rawMetrics(partial: Partial<RawMetrics>): RawMetrics {
+  const out = {} as RawMetrics;
+  for (const k of RAW_KEYS) out[k] = partial[k] ?? 0;
+  return out;
 }
 
 export interface Detection {
@@ -150,7 +164,7 @@ export interface Detection {
   wallets: string[];
   clusters: Cluster[];
   metrics: Metric[];
-  raw: Record<string, number>;
+  raw: RawMetrics;
   factors: ScoreFactor[];
   limitations: string[];
   timeline: TimelineEvent[];

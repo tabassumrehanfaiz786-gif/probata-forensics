@@ -28,11 +28,11 @@ export function WalletGraph({ d }: { d: Detection }) {
       const row = Math.floor(i / 2);
       pos.set(n.id, { x: CX + side * (subjects.length === 1 ? 250 : 320), y: CY - 60 + row * 70 });
     });
-    if (others.length === 1) pos.set(others[0].id, { x: CX, y: H - 34 });
+    if (others.length === 1 && others[0]) pos.set(others[0].id, { x: CX, y: H - 34 });
     const maxVol = Math.max(1, ...d.graph.nodes.map((n) => n.buyVolume + n.sellVolume));
     const edges = new Map<string, { a: string; b: string; value: number; count: number; kind: "funding" | "trade" }>();
     for (const e of d.graph.edges) {
-      const [a, b] = [e.from, e.to].sort();
+      const [a, b] = [e.from, e.to].sort() as [string, string];
       const k = `${e.kind}:${a}:${b}`;
       const x = edges.get(k) ?? { a, b, value: 0, count: 0, kind: e.kind };
       x.value += e.value;

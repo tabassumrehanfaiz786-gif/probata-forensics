@@ -5,7 +5,7 @@ import type { Detection } from "@/lib/forge/types";
 
 export function ActivityChart({ d, height = 280 }: { d: Detection; height?: number }) {
   const data = d.series.map((p) => ({ t: p.t, price: p.price, flagged: p.flagged, other: Math.max(0, p.volume - p.flagged) }));
-  const step = d.series[1] ? d.series[1].t - d.series[0].t : 300_000;
+  const step = d.series[1] && d.series[0] ? d.series[1].t - d.series[0].t : 300_000;
   const x1 = Math.floor(d.window.start / step) * step;
   const x2 = Math.floor(d.window.end / step) * step;
   return (

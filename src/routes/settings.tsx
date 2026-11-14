@@ -83,7 +83,7 @@ function SettingsPage() {
               <span className="text-sm font-medium">Alert threshold</span>
               <span className="font-mono text-lg text-alert">{draft.minConfidence}</span>
             </div>
-            <Slider className="mt-3" min={30} max={95} step={1} value={[draft.minConfidence]} disabled={!editable} onValueChange={([v]) => set("minConfidence", v)} aria-label="Alert threshold" />
+            <Slider className="mt-3" min={30} max={95} step={1} value={[draft.minConfidence]} disabled={!editable} onValueChange={([v]) => set("minConfidence", v ?? draft.minConfidence)} aria-label="Alert threshold" />
             <p className="mt-2 text-xs text-muted-foreground">Candidates below this score are suppressed, not deleted. At {draft.minConfidence}, {preview} of {detections.length} candidates would raise a case. Higher favours precision.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">

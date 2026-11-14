@@ -27,7 +27,7 @@ export interface EvidencePackage {
     engagedProvisions: { regime: string; citation: string; strength: string }[];
     keyLimitations: string[];
   };
-  timeline: { ts: string; kind: TimelineEvent["kind"]; label: string; detail: string; evidenceRef?: string }[];
+  timeline: { ts: string; kind: TimelineEvent["kind"]; label: string; detail: string; evidenceRef?: string | undefined }[];
   legal: { marc: LegalMapping; mica: LegalMapping; narrativeEditedByAnalyst: { marc: boolean; mica: boolean } };
   technicalAppendix: {
     metrics: Metric[];
@@ -60,7 +60,7 @@ export interface BuildOptions {
   generatedAt: Date;
   threshold: number;
   cap: number;
-  narratives: { marc?: string; mica?: string };
+  narratives: { marc?: string | undefined; mica?: string | undefined };
   audit: AuditEntry[];
 }
 
