@@ -22,12 +22,6 @@ export function WalletGraph({ d }: { d: Detection }) {
       pos.set(n.id, { x: CX + r1 * Math.cos(a), y: CY + r1 * 0.78 * Math.sin(a) });
     });
     funders.forEach((n, i) => pos.set(n.id, { x: CX + (i - (funders.length - 1) / 2) * 140, y: 42 }));
-    others.forEach((n, i) => {
-      const span = Math.PI * 0.9;
-      const a = others.length === 1 ? Math.PI / 2 : Math.PI / 2 - span / 2 + (i / (others.length - 1)) * span;
-      const rx = subjects.length === 1 ? 240 : 300;
-      pos.set(n.id, { x: CX + rx * Math.cos(a + Math.PI / 2) * -1, y: CY + 150 * Math.sin(a) + 10 });
-    });
     // place counterparties left/right for readability
     others.forEach((n, i) => {
       const side = i % 2 === 0 ? -1 : 1;
