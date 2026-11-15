@@ -101,7 +101,7 @@ const edgeTypes = { flow: FlowEdge };
 
 function Inner() {
   const intel = useMemo(() => buildIntel(), []);
-  const [selected, setSelected] = useState<string | null>("syn");
+  const [selected, setSelected] = useState<string | null>(null);
   const [chains, setChains] = useState<Set<string>>(new Set(CHAINS));
   const [minRisk, setMinRisk] = useState(0);
   const [q, setQ] = useState("");

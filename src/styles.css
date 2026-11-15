@@ -216,3 +216,5 @@
 .intel-ring { animation: intel-pulse 2.6s ease-in-out infinite; }
 .intel-dash { animation: intel-dash 1.4s linear infinite; }
 .react-flow__attribution { display: none; }
+.react-flow__controls-button { background: var(--intel-panel); border-color: var(--intel-line); fill: var(--intel-text); }
+.react-flow__minimap-node { fill-opacity: .9; }
