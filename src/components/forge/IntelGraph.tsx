@@ -24,7 +24,7 @@ const FLOW: Record<FlowKind, { color: string; name: string }> = {
   bridge: { color: "var(--intel-violet)", name: "Cross-chain" },
 };
 
-type ND = IntelEntity & { dim: boolean };
+type ND = IntelEntity & { dim: boolean } & Record<string, unknown>;
 type HubNode = Node<ND, "hub">;
 type LeafNode = Node<ND, "leaf">;
 
@@ -66,7 +66,7 @@ function LeafNodeView({ data }: NodeProps<LeafNode>) {
   );
 }
 
-type ED = { kind: FlowKind; value: number; label?: string; dim: boolean; major: boolean };
+type ED = Record<string, unknown> & { kind: FlowKind; value: number; label?: string; dim: boolean; major: boolean };
 function FlowEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Edge<ED>>) {
   const [path] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition: Position.Right, targetPosition: Position.Left, curvature: 0.25 });
   const d = data!;
