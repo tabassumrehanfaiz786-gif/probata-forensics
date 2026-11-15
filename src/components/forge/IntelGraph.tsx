@@ -143,11 +143,11 @@ function Inner() {
         </defs>
       </svg>
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.15} maxZoom={2.5}
-        onNodeClick={(_, n) => setSelected(n.type === "leaf" ? (n.data as ND).hub ?? n.id : n.id)} onPaneClick={() => setSelected(null)} proOptions={{ hideAttribution: true }}>
+        onNodeClick={(_, n) => setSelected(n.type === "leaf" ? (n.data as unknown as ND).hub ?? n.id : n.id)} onPaneClick={() => setSelected(null)} proOptions={{ hideAttribution: true }}>
         <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="var(--intel-line)" />
         <Controls position="bottom-left" style={{ background: "var(--intel-panel)" }} />
         <MiniMap pannable zoomable position="bottom-right" style={{ background: "var(--intel-panel)", border: "1px solid var(--intel-line)" }} maskColor="color-mix(in oklab, var(--intel-bg) 70%, transparent)"
-          nodeColor={(n) => CAT[(n.data as ND).category].color} nodeStrokeWidth={0} />
+          nodeColor={(n) => CAT[(n.data as unknown as ND).category].color} nodeStrokeWidth={0} />
       </ReactFlow>
 
       {/* Control bar */}
