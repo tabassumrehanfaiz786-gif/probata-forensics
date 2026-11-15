@@ -66,7 +66,7 @@ function LeafNodeView({ data }: NodeProps<LeafNode>) {
   );
 }
 
-type ED = Record<string, unknown> & { kind: FlowKind; value: number; label?: string; dim: boolean; major: boolean };
+type ED = Record<string, unknown> & { kind: FlowKind; value: number; label?: string | undefined; dim: boolean; major: boolean };
 function FlowEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Edge<ED>>) {
   const [path] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition: Position.Right, targetPosition: Position.Left, curvature: 0.25 });
   const d = data!;
@@ -76,7 +76,7 @@ function FlowEdge({ id, sourceX, sourceY, targetX, targetY, data }: EdgeProps<Ed
   return (
     <g style={{ opacity: op, transition: "opacity .3s" }}>
       {d.major && <path d={path} fill="none" stroke={col} strokeWidth={w * 3.5} strokeOpacity={0.18} style={{ filter: "blur(4px)" }} />}
-      <BaseEdge id={id} path={path} markerEnd={d.major ? `url(#arrow-${d.kind})` : undefined} style={{ stroke: col, strokeWidth: w }} />
+      <BaseEdge id={id} path={path} {...(d.major ? { markerEnd: `url(#arrow-${d.kind})` } : {})} style={{ stroke: col, strokeWidth: w }} />
       {d.major && (
         <>
           <path d={path} fill="none" stroke="var(--intel-text)" strokeWidth={1.2} strokeDasharray="4 36" className="intel-dash" strokeOpacity={0.8} />
