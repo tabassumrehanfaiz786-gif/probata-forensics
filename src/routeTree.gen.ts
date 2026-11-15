@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuditRouteImport } from './routes/audit'
+import { Route as GraphRouteImport } from './routes/graph'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CasesIndexRouteImport } from './routes/cases.index'
 import { Route as CasesCaseIdRouteImport } from './routes/cases.$caseId'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuditRoute = AuditRouteImport.update({
   id: '/audit',
   path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GraphRoute = GraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -50,6 +56,7 @@ const ReportCaseIdRoute = ReportCaseIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/graph': typeof GraphRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/graph': typeof GraphRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/graph': typeof GraphRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/audit'
+    | '/graph'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/audit'
+    | '/graph'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/audit'
+    | '/graph'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuditRoute: typeof AuditRoute
+  GraphRoute: typeof GraphRoute
   SettingsRoute: typeof SettingsRoute
   CasesCaseIdRoute: typeof CasesCaseIdRoute
   ReportCaseIdRoute: typeof ReportCaseIdRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/audit'
       preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/graph': {
+      id: '/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof GraphRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuditRoute: AuditRoute,
+  GraphRoute: GraphRoute,
   SettingsRoute: SettingsRoute,
   CasesCaseIdRoute: CasesCaseIdRoute,
   ReportCaseIdRoute: ReportCaseIdRoute,

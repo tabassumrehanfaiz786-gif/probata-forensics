@@ -19,9 +19,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — EvidenceForge" },
+      { title: "Settings — Probata Forensics" },
       { name: "description", content: "Detection thresholds, data sources, legal template versions and role permissions." },
-      { property: "og:title", content: "Settings — EvidenceForge" },
+      { property: "og:title", content: "Settings — Probata Forensics" },
       { property: "og:description", content: "Detection thresholds, data sources, legal template versions and role permissions." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

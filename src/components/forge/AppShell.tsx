@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck } from "lucide-react";
+import { Activity, Network, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck, Scale } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/cases", label: "Case library", icon: FolderSearch, exact: false },
+  { to: "/graph", label: "Intelligence graph", icon: Network, exact: false },
   { to: "/audit", label: "Audit log", icon: ScrollText, exact: false },
   { to: "/settings", label: "Settings", icon: Settings2, exact: false },
 ] as const;
@@ -36,11 +37,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
         <div className="flex items-center gap-2.5 border-b border-sidebar-border px-5 py-5">
           <div className="grid h-8 w-8 place-items-center rounded-md border border-primary/40 bg-primary/10">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+            <Scale className="h-4 w-4 text-primary" />
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight">EvidenceForge</div>
-            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">MARC · MiCA 91</div>
+            <div className="text-sm font-semibold tracking-tight">Probata Forensics</div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Things Proved · MARC · MiCA</div>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
@@ -81,8 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-12 items-center gap-4 border-b border-border bg-background/85 px-5 backdrop-blur">
           <div className="flex items-center gap-2 md:hidden">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">EvidenceForge</span>
+            <Scale className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Probata Forensics</span>
           </div>
           <nav className="flex gap-3 text-xs md:hidden">
             {NAV.map((n) => <Link key={n.to} to={n.to} className="text-muted-foreground hover:text-foreground">{n.label}</Link>)}

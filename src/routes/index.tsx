@@ -11,9 +11,9 @@ import type { PatternType } from "@/lib/forge/types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — EvidenceForge" },
+      { title: "Dashboard — Probata Forensics" },
       { name: "description", content: "Live high-priority crypto market abuse alerts and risk overview across venues." },
-      { property: "og:title", content: "Dashboard — EvidenceForge" },
+      { property: "og:title", content: "Dashboard — Probata Forensics" },
       { property: "og:description", content: "Live high-priority crypto market abuse alerts and risk overview across venues." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -149,7 +149,7 @@ function Dashboard() {
       )}
 
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
-        <ShieldAlert className="h-3.5 w-3.5" /> Indicators only. EvidenceForge never concludes that a person committed market abuse; every case carries counter-arguments for review. Patterns covered: {Object.values(PATTERN_LABEL).join(", ")}.
+        <ShieldAlert className="h-3.5 w-3.5" /> Indicators only. Probata Forensics never concludes that a person committed market abuse; every case carries counter-arguments for review. Patterns covered: {Object.values(PATTERN_LABEL).join(", ")}.
       </p>
     </div>
   );

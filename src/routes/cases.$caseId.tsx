@@ -20,9 +20,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/cases/$caseId")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.caseId} — Investigation — EvidenceForge` },
+      { title: `${params.caseId} — Investigation — Probata Forensics` },
       { name: "description", content: `Investigation workspace for case ${params.caseId}: timeline, wallet graph, MARC and MiCA legal analysis, and evidence package.` },
-      { property: "og:title", content: `${params.caseId} — Investigation — EvidenceForge` },
+      { property: "og:title", content: `${params.caseId} — Investigation — Probata Forensics` },
       { property: "og:description", content: `Investigation workspace for case ${params.caseId}: timeline, wallet graph, MARC and MiCA legal analysis.` },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },

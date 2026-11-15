@@ -11,9 +11,9 @@ import { useForge } from "@/lib/forge/store";
 export const Route = createFileRoute("/report/$caseId")({
   head: ({ params }) => ({
     meta: [
-      { title: `Evidence package ${params.caseId} — EvidenceForge` },
+      { title: `Evidence package ${params.caseId} — Probata Forensics` },
       { name: "description", content: `Printable evidence package for case ${params.caseId} with MARC and MiCA legal characterisation and audit trail.` },
-      { property: "og:title", content: `Evidence package ${params.caseId} — EvidenceForge` },
+      { property: "og:title", content: `Evidence package ${params.caseId} — Probata Forensics` },
       { property: "og:description", content: `Printable evidence package for case ${params.caseId}.` },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
@@ -59,7 +59,7 @@ function Report() {
           <div className="pointer-events-none absolute right-10 top-10 rotate-6 border-2 border-critical px-3 py-1 font-sans text-sm font-bold tracking-widest text-critical">DRAFT — NOT REVIEWED</div>
         )}
         <header className="border-b-2 border-paper-foreground pb-5">
-          <div className="font-sans text-[11px] uppercase tracking-[0.2em] text-paper-muted">EvidenceForge · Evidence package · {pkg.classification}</div>
+          <div className="font-sans text-[11px] uppercase tracking-[0.2em] text-paper-muted">Probata Forensics · Evidence package · {pkg.classification}</div>
           <h1 className="mt-2 font-sans text-3xl font-semibold tracking-tight">{pkg.caseRef}: {es.pattern}</h1>
           <p className="mt-1 font-sans text-sm text-paper-muted">{es.pair} · {es.venue} · {es.window.start} → {es.window.end}</p>
           <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 font-sans text-[11px] text-paper-muted md:grid-cols-4">
