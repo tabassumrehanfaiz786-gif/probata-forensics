@@ -83,9 +83,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "EvidenceForge — Crypto market abuse evidence" },
+      { title: "Probata Forensics — Crypto market abuse evidence" },
       { name: "description", content: "Detect crypto market manipulation and generate auditable evidence mapped to UK MARC and MiCA Article 91." },
-      { property: "og:title", content: "EvidenceForge — Crypto market abuse evidence" },
+      { property: "og:title", content: "Probata Forensics — Crypto market abuse evidence" },
       { property: "og:description", content: "Detect crypto market manipulation and generate auditable evidence mapped to UK MARC and MiCA Article 91." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

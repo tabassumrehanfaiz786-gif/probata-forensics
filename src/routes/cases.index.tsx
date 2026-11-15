@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/cases/")({
   head: () => ({
     meta: [
-      { title: "Case library — EvidenceForge" },
+      { title: "Case library — Probata Forensics" },
       { name: "description", content: "Search and filter historical market manipulation cases by pattern, venue, status and confidence." },
-      { property: "og:title", content: "Case library — EvidenceForge" },
+      { property: "og:title", content: "Case library — Probata Forensics" },
       { property: "og:description", content: "Search and filter historical market manipulation cases by pattern, venue, status and confidence." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

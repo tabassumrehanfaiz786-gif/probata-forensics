@@ -8,9 +8,9 @@ import { useForge } from "@/lib/forge/store";
 export const Route = createFileRoute("/audit")({
   head: () => ({
     meta: [
-      { title: "Audit log — EvidenceForge" },
+      { title: "Audit log — Probata Forensics" },
       { name: "description", content: "Chronological record of case decisions, narrative edits, exports and settings changes." },
-      { property: "og:title", content: "Audit log — EvidenceForge" },
+      { property: "og:title", content: "Audit log — Probata Forensics" },
       { property: "og:description", content: "Chronological record of case decisions, narrative edits, exports and settings changes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

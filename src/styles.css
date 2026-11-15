@@ -197,3 +197,22 @@
     margin: 16mm 14mm;
   }
 }
+
+/* Probata intelligence canvas palette */
+:root {
+  --intel-bg: oklch(0.13 0.02 245);
+  --intel-panel: oklch(0.17 0.025 245 / 0.82);
+  --intel-line: oklch(0.32 0.03 240);
+  --intel-text: oklch(0.94 0.01 230);
+  --intel-muted: oklch(0.65 0.03 235);
+  --intel-amber: oklch(0.78 0.16 65);
+  --intel-red: oklch(0.68 0.2 25);
+  --intel-cyan: oklch(0.78 0.12 215);
+  --intel-violet: oklch(0.72 0.15 300);
+  --intel-green: oklch(0.8 0.13 165);
+}
+@keyframes intel-pulse { 0%,100% { opacity: .55; transform: scale(1);} 50% { opacity: 1; transform: scale(1.08);} }
+@keyframes intel-dash { to { stroke-dashoffset: -40; } }
+.intel-ring { animation: intel-pulse 2.6s ease-in-out infinite; }
+.intel-dash { animation: intel-dash 1.4s linear infinite; }
+.react-flow__attribution { display: none; }
