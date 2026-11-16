@@ -5,7 +5,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { ArrowLeftRight, Building2, Crosshair, Droplets, Search, Shuffle, Users, Wallet, X, Megaphone } from "lucide-react";
-import { buildIntel, CHAINS, type FlowKind, type IntelCategory, type IntelEntity } from "@/lib/forge/intel-data";
+import { buildPattern, PATTERNS, type PatternId, CHAINS, type FlowKind, type IntelCategory, type IntelEntity } from "@/lib/forge/intel-data";
 
 const CAT: Record<IntelCategory, { color: string; icon: typeof Wallet; name: string }> = {
   primary: { color: "var(--intel-amber)", icon: Crosshair, name: "Primary target" },
@@ -100,7 +100,9 @@ const nodeTypes = { hub: HubNodeView, leaf: LeafNodeView };
 const edgeTypes = { flow: FlowEdge };
 
 function Inner() {
-  const intel = useMemo(() => buildIntel(), []);
+  const [pattern, setPattern] = useState<PatternId>("global");
+  const intel = useMemo(() => buildPattern(pattern), [pattern]);
+  const pdef = PATTERNS.find((p) => p.id === pattern)!;
   const [selected, setSelected] = useState<string | null>(null);
   const [chains, setChains] = useState<Set<string>>(new Set(CHAINS));
   const [minRisk, setMinRisk] = useState(0);
@@ -124,11 +126,11 @@ function Inner() {
   const ids = new Set(nodes.map((n) => n.id));
   const edges: Edge<ED>[] = intel.flows.filter((f) => ids.has(f.from) && ids.has(f.to)).map((f) => ({
     id: f.id, source: f.from, target: f.to, type: "flow",
-    data: { kind: f.kind, value: f.value, label: f.label, major: !f.id.includes("-w"), dim: !!focus && f.from !== selected && f.to !== selected },
+    data: { kind: f.kind, value: f.value, label: f.label, major: !f.id.includes("-w-") && !f.id.endsWith("-e"), dim: !!focus && f.from !== selected && f.to !== selected },
   }));
 
   const sel = intel.entities.find((e) => e.id === selected);
-  const selFlows = intel.flows.filter((f) => !f.id.includes("-w") && (f.from === selected || f.to === selected));
+  const selFlows = intel.flows.filter((f) => !f.id.endsWith("-e") && (f.from === selected || f.to === selected));
   const name = (id: string) => intel.entities.find((e) => e.id === id)?.label ?? id;
 
   return (
@@ -142,7 +144,7 @@ function Inner() {
           ))}
         </defs>
       </svg>
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.15} maxZoom={2.5}
+      <ReactFlow key={pattern} nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: 0.12 }} minZoom={0.15} maxZoom={2.5}
         onNodeClick={(_, n) => setSelected(n.type === "leaf" ? (n.data as unknown as ND).hub ?? n.id : n.id)} onPaneClick={() => setSelected(null)} proOptions={{ hideAttribution: true }}>
         <Background variant={BackgroundVariant.Dots} gap={26} size={1.2} color="var(--intel-line)" />
         <Controls position="bottom-left" style={{ background: "var(--intel-panel)" }} />
@@ -180,6 +182,19 @@ function Inner() {
         </div>
       </div>
 
+      {/* Pattern selector */}
+      <div className="absolute left-3 top-[4.5rem] w-72 max-w-[calc(100%-1.5rem)] rounded-lg p-3 backdrop-blur-md" style={{ background: "var(--intel-panel)", border: "1px solid var(--intel-line)", color: "var(--intel-text)" }}>
+        <div className="font-mono text-[9px] uppercase tracking-widest" style={{ color: "var(--intel-muted)" }}>Manipulation topology</div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {PATTERNS.map((p) => (
+            <button key={p.id} onClick={() => { setPattern(p.id); setSelected(null); }} className="rounded px-2 py-1 text-[11px] transition"
+              style={{ border: `1px solid ${p.id === pattern ? "var(--intel-amber)" : "var(--intel-line)"}`, color: p.id === pattern ? "var(--intel-amber)" : "var(--intel-muted)" }}>{p.name}</button>
+          ))}
+        </div>
+        <div className="mt-2 font-mono text-[10px]" style={{ color: "var(--intel-amber)" }}>{pdef.statute}</div>
+        <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "var(--intel-muted)" }}>{pdef.summary}</p>
+      </div>
+
       {/* HUD */}
       {sel && (
         <div className="absolute right-3 top-20 w-80 max-w-[calc(100%-1.5rem)] rounded-lg p-4 backdrop-blur-md" style={{ background: "var(--intel-panel)", border: `1px solid ${CAT[sel.category].color}`, boxShadow: `0 0 40px color-mix(in oklab, ${CAT[sel.category].color} 25%, transparent)`, color: "var(--intel-text)" }}>
@@ -213,7 +228,7 @@ function Inner() {
               ))}
             </div>
           )}
-          <p className="mt-3 font-mono text-[9px]" style={{ color: "var(--intel-muted)" }}>Fictional replay entities · UK MAR Art. 12 / MiCA Art. 91 indicators</p>
+          <p className="mt-3 font-mono text-[9px]" style={{ color: "var(--intel-muted)" }}>Fictional replay entities · {pdef.statute} · indicators, not proof</p>
         </div>
       )}
     </div>

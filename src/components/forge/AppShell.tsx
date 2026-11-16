@@ -12,6 +12,7 @@ const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/cases", label: "Case library", icon: FolderSearch, exact: false },
   { to: "/graph", label: "Intelligence graph", icon: Network, exact: false },
+  { to: "/live", label: "Live surveillance", icon: Activity, exact: false },
   { to: "/audit", label: "Audit log", icon: ScrollText, exact: false },
   { to: "/settings", label: "Settings", icon: Settings2, exact: false },
 ] as const;
