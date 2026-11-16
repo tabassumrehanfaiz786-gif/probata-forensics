@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as GraphRouteImport } from './routes/graph'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CasesIndexRouteImport } from './routes/cases.index'
 import { Route as CasesCaseIdRouteImport } from './routes/cases.$caseId'
@@ -30,6 +31,11 @@ const AuditRoute = AuditRouteImport.update({
 const GraphRoute = GraphRouteImport.update({
   id: '/graph',
   path: '/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
   '/graph': typeof GraphRoute
+  '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
   '/graph': typeof GraphRoute
+  '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
   '/graph': typeof GraphRoute
+  '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/audit'
     | '/graph'
+    | '/live'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/audit'
     | '/graph'
+    | '/live'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/audit'
     | '/graph'
+    | '/live'
     | '/settings'
     | '/cases/$caseId'
     | '/report/$caseId'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuditRoute: typeof AuditRoute
   GraphRoute: typeof GraphRoute
+  LiveRoute: typeof LiveRoute
   SettingsRoute: typeof SettingsRoute
   CasesCaseIdRoute: typeof CasesCaseIdRoute
   ReportCaseIdRoute: typeof ReportCaseIdRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/graph'
       fullPath: '/graph'
       preLoaderRoute: typeof GraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuditRoute: AuditRoute,
   GraphRoute: GraphRoute,
+  LiveRoute: LiveRoute,
   SettingsRoute: SettingsRoute,
   CasesCaseIdRoute: CasesCaseIdRoute,
   ReportCaseIdRoute: ReportCaseIdRoute,
