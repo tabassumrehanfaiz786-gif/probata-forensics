@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Banknote, FileDown, FileJson, FileText, MessageSquare, Radio, ScanSearch, TrendingUp } from "lucide-react";
+import { ArrowLeft, Banknote, FileDown, FileJson, FileText, MessageSquare, Radio, ScanSearch, TrendingUp, Scale } from "lucide-react";
 import { toast } from "sonner";
 
 import { ActivityChart } from "@/components/forge/ActivityChart";
@@ -184,6 +184,9 @@ function EvidenceTab({ d }: { d: Detection }) {
         <div className="grid gap-2">
           <Button asChild>
             <Link to="/report/$caseId" params={{ caseId: d.caseRef }}><FileDown className="mr-2 h-4 w-4" /> Open printable package (PDF)</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link to="/filings/$caseId" params={{ caseId: d.caseRef }}><Scale className="mr-2 h-4 w-4" /> FCA STOR / MiCA filings</Link>
           </Button>
           <Button variant="outline" onClick={() => exportAs("md")}><FileText className="mr-2 h-4 w-4" /> Download Markdown</Button>
           <Button variant="outline" onClick={() => exportAs("json")}><FileJson className="mr-2 h-4 w-4" /> Download JSON</Button>

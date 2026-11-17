@@ -16,6 +16,7 @@ import { Route as LiveRouteImport } from './routes/live'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as CasesIndexRouteImport } from './routes/cases.index'
 import { Route as CasesCaseIdRouteImport } from './routes/cases.$caseId'
+import { Route as FilingsCaseIdRouteImport } from './routes/filings.$caseId'
 import { Route as ReportCaseIdRouteImport } from './routes/report.$caseId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const CasesCaseIdRoute = CasesCaseIdRouteImport.update({
   path: '/cases/$caseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FilingsCaseIdRoute = FilingsCaseIdRouteImport.update({
+  id: '/filings/$caseId',
+  path: '/filings/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportCaseIdRoute = ReportCaseIdRouteImport.update({
   id: '/report/$caseId',
   path: '/report/$caseId',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/filings/$caseId': typeof FilingsCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
   '/cases/': typeof CasesIndexRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/filings/$caseId': typeof FilingsCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
   '/cases': typeof CasesIndexRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute
   '/settings': typeof SettingsRoute
   '/cases/$caseId': typeof CasesCaseIdRoute
+  '/filings/$caseId': typeof FilingsCaseIdRoute
   '/report/$caseId': typeof ReportCaseIdRoute
   '/cases/': typeof CasesIndexRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/settings'
     | '/cases/$caseId'
+    | '/filings/$caseId'
     | '/report/$caseId'
     | '/cases/'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/settings'
     | '/cases/$caseId'
+    | '/filings/$caseId'
     | '/report/$caseId'
     | '/cases'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/settings'
     | '/cases/$caseId'
+    | '/filings/$caseId'
     | '/report/$caseId'
     | '/cases/'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute
   SettingsRoute: typeof SettingsRoute
   CasesCaseIdRoute: typeof CasesCaseIdRoute
+  FilingsCaseIdRoute: typeof FilingsCaseIdRoute
   ReportCaseIdRoute: typeof ReportCaseIdRoute
   CasesIndexRoute: typeof CasesIndexRoute
 }
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasesCaseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/filings/$caseId': {
+      id: '/filings/$caseId'
+      path: '/filings/$caseId'
+      fullPath: '/filings/$caseId'
+      preLoaderRoute: typeof FilingsCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/report/$caseId': {
       id: '/report/$caseId'
       path: '/report/$caseId'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   SettingsRoute: SettingsRoute,
   CasesCaseIdRoute: CasesCaseIdRoute,
+  FilingsCaseIdRoute: FilingsCaseIdRoute,
   ReportCaseIdRoute: ReportCaseIdRoute,
   CasesIndexRoute: CasesIndexRoute,
 }

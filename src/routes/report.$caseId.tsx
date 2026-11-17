@@ -47,7 +47,8 @@ function Report() {
     <div className="min-h-screen bg-muted/40 py-6 print:bg-paper print:py-0">
       <div className="no-print mx-auto mb-4 flex max-w-[900px] flex-wrap items-center gap-2 px-4">
         <Link to="/cases/$caseId" params={{ caseId }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to workspace</Link>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Link to="/filings/$caseId" params={{ caseId }} className="inline-flex items-center rounded-md border border-input px-3 text-sm">Regulatory filings</Link>
           <Button variant="outline" size="sm" onClick={() => { downloadText(`${pkg.packageId}.md`, toMarkdown(pkg), "text/markdown"); log(`Exported Markdown (${pkg.classification})`, caseId, `sha256 ${pkg.auditTrail.packageHash.slice(0, 16)}…`); }}><FileText className="mr-1.5 h-4 w-4" /> Markdown</Button>
           <Button variant="outline" size="sm" onClick={() => { downloadText(`${pkg.packageId}.json`, JSON.stringify(pkg, null, 2), "application/json"); log(`Exported JSON (${pkg.classification})`, caseId, `sha256 ${pkg.auditTrail.packageHash.slice(0, 16)}…`); }}><FileJson className="mr-1.5 h-4 w-4" /> JSON</Button>
           <Button size="sm" onClick={() => { log(`Exported PDF (${pkg.classification})`, caseId, `sha256 ${pkg.auditTrail.packageHash.slice(0, 16)}…`); window.print(); }}><Printer className="mr-1.5 h-4 w-4" /> Save as PDF</Button>
