@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/forge/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { ForgeProvider } from "@/lib/forge/store";
+import { LiveStreamProvider } from "@/lib/forge/live-stream";
 
 function NotFoundComponent() {
   return (
@@ -130,11 +131,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ForgeProvider>
+        <LiveStreamProvider>
         <AppShell>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </AppShell>
         <Toaster theme="dark" position="bottom-right" />
+        </LiveStreamProvider>
       </ForgeProvider>
     </QueryClientProvider>
   );
