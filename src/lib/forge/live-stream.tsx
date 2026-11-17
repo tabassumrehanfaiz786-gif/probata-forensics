@@ -20,7 +20,7 @@ export function LiveStreamProvider({ children }: { children: ReactNode }) {
   const [base, setBase] = useState<Base>("btc");
   const [buf, setBuf] = useState<LiveTick[]>([]);
   const [state, setState] = useState<StreamState>("connecting");
-  const [venue, setVenue] = useState(EXCHANGES[0].label);
+  const [venue, setVenue] = useState(EXCHANGES[0]!.label);
   const [attempts, setAttempts] = useState<string[]>([]);
   const [log, setLog] = useState<LoggedAlert[]>([]);
   const [rate, setRate] = useState(0);
@@ -32,7 +32,7 @@ export function LiveStreamProvider({ children }: { children: ReactNode }) {
     setBuf([]); pending.current = []; setAttempts([]);
     const connect = () => {
       if (stopped) return;
-      const ex = EXCHANGES[idx];
+      const ex = EXCHANGES[idx]!;
       setVenue(ex.label); setState((s) => (s === "live" ? "failover" : s === "failover" ? "failover" : "connecting"));
       let gotTick = false;
       const fail = (why: string) => {

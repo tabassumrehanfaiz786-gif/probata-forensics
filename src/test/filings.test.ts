@@ -7,7 +7,7 @@ describe("exchange fallback", () => {
     expect(nextExchange(3)).toBe(0);
   });
   it("Coinbase maker side sell is a taker buy", () => {
-    const t = EXCHANGES[2].parse(JSON.stringify({ type: "match", trade_id: 1, time: "2026-01-01T00:00:00Z", price: "10", size: "2", side: "sell" }));
-    expect(t[0].buy).toBe(true);
+    const t = EXCHANGES[2]!.parse(JSON.stringify({ type: "match", trade_id: 1, time: "2026-01-01T00:00:00Z", price: "10", size: "2", side: "sell" }));
+    expect(t[0]!.buy).toBe(true);
   });
 });
