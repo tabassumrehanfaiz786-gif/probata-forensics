@@ -33,3 +33,5 @@ use the editor.
 - Detection, legal mapping and evidence packaging live in `src/lib/forge/` as pure functions over scenario records; UI only reads `useForge()` — keeps scoring explainable and testable.
 - Detection runs on a deterministic seeded replay dataset (`scenarios.ts`) so dataset hashes in evidence packages are reproducible; swap in live feeds behind the same `Scenario` shape.
 - Case status, narrative edits, role and audit log persist in browser storage for now; move to Lovable Cloud when real accounts are added.
+- Live tape runs app-wide in `LiveStreamProvider` (root) with ordered public-exchange failover in `exchanges.ts`, so surveillance keeps running across pages and in regions where one venue is blocked.
+- Regulatory filing drafts and admissibility checks are pure functions over `EvidencePackage` in `filings.ts`, so filings always match the hashed package.
