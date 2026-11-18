@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Radio } from "lucide-react";
 
+import { PromoteLive } from "@/components/forge/PromoteLive";
 import { BUFFER_SIZE, DEFAULT_LIVE_THRESHOLDS } from "@/lib/forge/live-metrics";
 import { BASES } from "@/lib/forge/exchanges";
 import { useLiveStream } from "@/lib/forge/live-stream";
@@ -43,7 +44,8 @@ function LivePage() {
           <h1 className="mt-1 text-2xl font-semibold">Live Tape Surveillance</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Rolling {BUFFER_SIZE}-tick buffer of real trades. Runs in the background across every page and automatically switches Binance → Binance mirror → Coinbase → Kraken if a venue is blocked. Indicators are investigative leads — public trades carry no account identity, so they cannot prove beneficial ownership or intent.</p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <PromoteLive always />
           {BASES.map((s) => (
             <button key={s} onClick={() => setBase(s)} className={cn("rounded-md border px-3 py-1.5 font-mono text-xs uppercase", s === base ? "border-primary text-primary" : "border-border text-muted-foreground")}>{s}/usd</button>
           ))}

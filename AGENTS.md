@@ -35,3 +35,5 @@ use the editor.
 - Case status, narrative edits, role and audit log persist in browser storage for now; move to Lovable Cloud when real accounts are added.
 - Live tape runs app-wide in `LiveStreamProvider` (root) with ordered public-exchange failover in `exchanges.ts`, so surveillance keeps running across pages and in regions where one venue is blocked.
 - Regulatory filing drafts and admissibility checks are pure functions over `EvidencePackage` in `filings.ts`, so filings always match the hashed package.
+- Live leads become cases via pure `promote.ts` (tick buffer → `Scenario` with `live` flag), stored in browser state; their confidence is capped in the store because public tape has no account identity.
+- Real enforcement dossiers live in `dossiers.ts` as cited summaries only — never add wallet addresses or tx hashes not quoted in a linked official source.

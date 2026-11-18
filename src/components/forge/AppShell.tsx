@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, Network, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck, Scale } from "lucide-react";
+import { Activity, Gavel, Network, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck, Scale } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,7 @@ const NAV = [
   { to: "/cases", label: "Case library", icon: FolderSearch, exact: false },
   { to: "/graph", label: "Intelligence graph", icon: Network, exact: false },
   { to: "/live", label: "Live surveillance", icon: Activity, exact: false },
+  { to: "/dossiers", label: "Enforcement dossiers", icon: Gavel, exact: false },
   { to: "/audit", label: "Audit log", icon: ScrollText, exact: false },
   { to: "/settings", label: "Settings", icon: Settings2, exact: false },
 ] as const;

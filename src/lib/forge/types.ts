@@ -70,6 +70,8 @@ export interface Scenario {
   labels: Record<string, string>;
   defaultStatus: CaseStatus;
   assignee: string;
+  /** Set when the case was promoted from the live public tape. */
+  live?: { promotedAt: number; alerts: string[]; tickCount: number } | undefined;
 }
 
 export interface ScoreFactor {

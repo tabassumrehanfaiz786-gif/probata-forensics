@@ -18,6 +18,7 @@ interface Persisted {
   narratives: Record<string, string>;
   settings: DetectionSettings;
   audit: AuditEntry[];
+  liveCases?: Scenario[];
 }
 
 const SEED_AUDIT: AuditEntry[] = [
@@ -48,6 +49,7 @@ interface Ctx {
   log: (action: string, target: string, detail: string) => void;
   scenarioOf: (caseRef: string) => Scenario | undefined;
   buildPackage: (caseRef: string) => Promise<EvidencePackage | null>;
+  promoteLive: (sc: Scenario) => void;
 }
 
 
@@ -74,8 +76,9 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
     if (loaded.current) localStorage.setItem(KEY, JSON.stringify(state));
   }, [state]);
 
-  const scenarios = getScenarios();
-  const detections = useMemo(() => scenarios.map((s) => runDetector(s, state.settings)), [scenarios, state.settings]);
+  const liveCases = state.liveCases;
+  const scenarios = useMemo(() => [...(liveCases ?? []), ...getScenarios()], [liveCases]);
+  const detections = useMemo(() => scenarios.map((s) => (s.live ? liveDetection(s, state.settings) : runDetector(s, state.settings))), [scenarios, state.settings]);
   const cases = useMemo(() => detections.filter((d) => !d.suppressed).sort((a, b) => b.window.start - a.window.start), [detections]);
   const suppressed = useMemo(() => detections.filter((d) => d.suppressed), [detections]);
 
@@ -177,9 +180,30 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
     log,
     scenarioOf,
     buildPackage,
+    promoteLive: (sc) =>
+      setState((s) => ({
+        ...s,
+        liveCases: [sc, ...(s.liveCases ?? [])].slice(0, MAX_LIVE_CASES),
+        audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action: "Live lead promoted", target: sc.caseRef, detail: `${sc.trades.length} ticks · ${sc.venue.name} · ${sc.live?.alerts.join(", ")}` }, ...s.audit],
+      })),
   };
 
   return <ForgeContext.Provider value={value}>{children}</ForgeContext.Provider>;
+}
+
+const MAX_LIVE_CASES = 20;
+
+/** Public-tape cases are leads: always listed, confidence capped because trades carry no account identity. */
+export const LIVE_CONFIDENCE_CAP = 50;
+function liveDetection(s: Scenario, cfg: DetectionSettings): Detection {
+  const d = runDetector(s, cfg);
+  return {
+    ...d,
+    suppressed: false,
+    confidence: Math.min(d.confidence, LIVE_CONFIDENCE_CAP),
+    summary: `Live lead promoted from ${s.venue.name} public tape (${s.trades.length} ticks): ${s.live?.alerts.join(", ")}. Requires venue account data before any attribution.`,
+    limitations: ["Public trades carry no account identity; buyer/seller are anonymous aggressor/resting roles, so wallet clustering is not meaningful.", `Confidence capped at ${LIVE_CONFIDENCE_CAP} until venue KYC/order-book data is obtained.`, ...d.limitations],
+  };
 }
 
 export function useForge() {

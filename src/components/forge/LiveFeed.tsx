@@ -1,4 +1,5 @@
 import { fmtTime } from "@/lib/forge/format";
+import { PromoteLive } from "./PromoteLive";
 import { useLiveStream } from "@/lib/forge/live-stream";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ export function LiveFeed() {
         <span className="ml-auto font-mono text-muted-foreground">{state === "live" ? `${rate || "…"} trades/min` : state}</span>
       </div>
       {alerts.length > 0 && <p className="rounded border border-destructive/60 px-2 py-1 text-[11px] text-destructive">{alerts.length} live lead{alerts.length > 1 ? "s" : ""}: {alerts.map((a) => a.label).join(", ")}</p>}
+      <PromoteLive />
       <table className="w-full font-mono text-[11px] tabular-nums">
         <tbody>
           {ticks.map((t) => (
