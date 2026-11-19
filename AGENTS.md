@@ -32,8 +32,9 @@ use the editor.
 ## EvidenceForge architecture
 - Detection, legal mapping and evidence packaging live in `src/lib/forge/` as pure functions over scenario records; UI only reads `useForge()` — keeps scoring explainable and testable.
 - Detection runs on a deterministic seeded replay dataset (`scenarios.ts`) so dataset hashes in evidence packages are reproducible; swap in live feeds behind the same `Scenario` shape.
-- Case status, narrative edits, role and audit log persist in browser storage for now; move to Lovable Cloud when real accounts are added.
+- Signed-in users share one team workspace in Lovable Cloud (`cloud.ts`): case decisions, promoted live cases and an append-only audit log whose actor/role/time are stamped by DB triggers; signed-out visitors keep a browser-only demo mode so the public demo stays usable.
+- Detector validation lives in pure `methodology.ts`: labelled benchmark truth plus historical reconstructions whose parameters are tagged cited (with official URL) or assumed.
 - Live tape runs app-wide in `LiveStreamProvider` (root) with ordered public-exchange failover in `exchanges.ts`, so surveillance keeps running across pages and in regions where one venue is blocked.
 - Regulatory filing drafts and admissibility checks are pure functions over `EvidencePackage` in `filings.ts`, so filings always match the hashed package.
 - Live leads become cases via pure `promote.ts` (tick buffer → `Scenario` with `live` flag), stored in browser state; their confidence is capped in the store because public tape has no account identity.
-- Real enforcement dossiers live in `dossiers.ts` as cited summaries only — never add wallet addresses or tx hashes not quoted in a linked official source.
+- Real enforcement dossiers live in `dossiers.ts`; every fact and proceeding carries its own official-host source (tested) — never add wallet addresses or tx hashes not quoted in a linked official source.

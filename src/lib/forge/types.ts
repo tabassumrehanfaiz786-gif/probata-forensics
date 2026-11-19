@@ -200,4 +200,6 @@ export interface AuditEntry {
   action: string;
   target: string;
   detail: string;
+  /** Signed-in team member's email, stamped by the database (absent in demo mode). */
+  actor?: string | undefined;
 }

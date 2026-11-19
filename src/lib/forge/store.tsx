@@ -1,6 +1,9 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { supabase } from "@/integrations/supabase/client";
+
+import { appendAudit, loadTeam, saveLiveCase, saveNarrative, saveStatus, type TeamSnapshot } from "./cloud";
 import { ForgeContext } from "./context";
 import { CONFIDENCE_CAP, runDetector } from "./detection";
 import { buildEvidencePackage, type EvidencePackage } from "./evidence";
@@ -31,8 +34,15 @@ const SEED_AUDIT: AuditEntry[] = [
 
 const DEFAULT: Persisted = { role: "analyst", statuses: {}, narratives: {}, settings: DEFAULT_SETTINGS, audit: SEED_AUDIT };
 
+export interface TeamUser { id: string; email: string | null }
+
 interface Ctx {
   ready: boolean;
+  /** "team" when signed in: cases and audit log are shared through Lovable Cloud. */
+  mode: "demo" | "team";
+  user: TeamUser | null;
+  syncing: boolean;
+  signOut: () => Promise<void>;
   role: Role;
   setRole: (r: Role) => void;
   settings: DetectionSettings;
@@ -57,6 +67,9 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Persisted>(DEFAULT);
   const [ready, setReady] = useState(false);
   const loaded = useRef(false);
+  const [user, setUser] = useState<TeamUser | null>(null);
+  const [team, setTeam] = useState<TeamSnapshot | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     try {
@@ -76,66 +89,143 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
     if (loaded.current) localStorage.setItem(KEY, JSON.stringify(state));
   }, [state]);
 
-  const liveCases = state.liveCases;
+  // Identity transitions only; token refreshes must not reload the team workspace.
+  useEffect(() => {
+    const apply = (u: { id: string; email?: string | null } | null | undefined) =>
+      setUser((prev) => (prev?.id === u?.id ? prev : u ? { id: u.id, email: u.email ?? null } : null));
+    void supabase.auth.getUser().then(({ data }) => apply(data.user));
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED" || event === "INITIAL_SESSION") apply(session?.user);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  const reload = useCallback(async () => {
+    if (!user) return;
+    setSyncing(true);
+    try {
+      setTeam(await loadTeam(user.id));
+    } catch (e) {
+      toast.error("Could not load the team workspace", { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setSyncing(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) { setTeam(null); return; }
+    void reload();
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const bump = () => { clearTimeout(t); t = setTimeout(() => void reload(), 400); };
+    const ch = supabase
+      .channel(`team-${user.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "case_states" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "live_cases" }, bump)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "audit_log" }, bump)
+      .subscribe();
+    return () => { clearTimeout(t); void supabase.removeChannel(ch); };
+  }, [user, reload]);
+
+  const mode: "demo" | "team" = user ? "team" : "demo";
+  const role: Role = team ? team.role : state.role;
+  const statuses = team ? team.statuses : state.statuses;
+  const narratives = team ? team.narratives : state.narratives;
+  const audit = team ? team.audit : state.audit;
+  const liveCases = team ? team.liveCases : state.liveCases;
+
+  const entry = useCallback(
+    (action: string, target: string, detail: string): AuditEntry => ({ id: crypto.randomUUID(), ts: Date.now(), role, action, target, detail, actor: user?.email ?? undefined }),
+    [role, user],
+  );
+
+  /** Team mode: apply optimistically, write to Cloud, and resync from the database on failure. */
+  const teamWrite = useCallback(
+    (optimistic: (t: TeamSnapshot) => TeamSnapshot, write: () => Promise<unknown>) => {
+      setTeam((t) => (t ? optimistic(t) : t));
+      write().catch((e: unknown) => {
+        toast.error("Not saved to the team workspace", { description: e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e) });
+        void reload();
+      });
+    },
+    [reload],
+  );
+
   const scenarios = useMemo(() => [...(liveCases ?? []), ...getScenarios()], [liveCases]);
   const detections = useMemo(() => scenarios.map((s) => (s.live ? liveDetection(s, state.settings) : runDetector(s, state.settings))), [scenarios, state.settings]);
   const cases = useMemo(() => detections.filter((d) => !d.suppressed).sort((a, b) => b.window.start - a.window.start), [detections]);
   const suppressed = useMemo(() => detections.filter((d) => d.suppressed), [detections]);
 
-  const log = useCallback((action: string, target: string, detail: string) => {
-    setState((s) => ({ ...s, audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action, target, detail }, ...s.audit] }));
-  }, []);
+  const log = useCallback(
+    (action: string, target: string, detail: string) => {
+      const e = entry(action, target, detail);
+      if (user) teamWrite((t) => ({ ...t, audit: [e, ...t.audit] }), () => appendAudit(user.id, action, target, detail));
+      else setState((s) => ({ ...s, audit: [e, ...s.audit] }));
+    },
+    [entry, user, teamWrite],
+  );
 
   const statusOf = useCallback(
-    (caseRef: string) => state.statuses[caseRef] ?? detections.find((d) => d.caseRef === caseRef)?.defaultStatus ?? "new",
-    [state.statuses, detections],
+    (caseRef: string) => statuses[caseRef] ?? detections.find((d) => d.caseRef === caseRef)?.defaultStatus ?? "new",
+    [statuses, detections],
   );
 
   const setStatus = useCallback(
     (caseRef: string, next: CaseStatus, note?: string) => {
-      if (!canSetStatus(state.role, next)) {
+      if (!canSetStatus(role, next)) {
         toast.error(`Your role cannot set “${STATUS_LABEL[next]}”`);
         return false;
       }
-      setState((s) => ({
-        ...s,
-        statuses: { ...s.statuses, [caseRef]: next },
-        audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action: `Status → ${STATUS_LABEL[next]}`, target: caseRef, detail: note || "—" }, ...s.audit],
-      }));
+      const action = `Status → ${STATUS_LABEL[next]}`, detail = note || "—";
+      const e = entry(action, caseRef, detail);
+      if (user) {
+        teamWrite(
+          (t) => ({ ...t, statuses: { ...t.statuses, [caseRef]: next }, audit: [e, ...t.audit] }),
+          async () => { await saveStatus(caseRef, next); await appendAudit(user.id, action, caseRef, detail); },
+        );
+      } else {
+        setState((s) => ({ ...s, statuses: { ...s.statuses, [caseRef]: next }, audit: [e, ...s.audit] }));
+      }
       toast.success(`${caseRef} marked ${STATUS_LABEL[next]}`);
       return true;
     },
-    [state.role],
+    [role, entry, user, teamWrite],
   );
 
-  const setNarrative = useCallback((caseRef: string, regime: Regime, text: string | null) => {
-    setState((s) => {
+  const setNarrative = useCallback(
+    (caseRef: string, regime: Regime, text: string | null) => {
       const key = `${caseRef}:${regime}`;
-      const narratives = { ...s.narratives };
-      if (text === null) delete narratives[key];
-      else narratives[key] = text;
-      return {
-        ...s,
-        narratives,
-        audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action: text === null ? `${regime} narrative reset` : `${regime} narrative edited`, target: caseRef, detail: text === null ? "Restored generated narrative" : `${text.length} characters` }, ...s.audit],
+      const apply = (n: Record<string, string>) => {
+        const out = { ...n };
+        if (text === null) delete out[key];
+        else out[key] = text;
+        return out;
       };
-    });
-  }, []);
+      const action = text === null ? `${regime} narrative reset` : `${regime} narrative edited`;
+      const detail = text === null ? "Restored generated narrative" : `${text.length} characters`;
+      const e = entry(action, caseRef, detail);
+      if (user) {
+        teamWrite(
+          (t) => ({ ...t, narratives: apply(t.narratives), audit: [e, ...t.audit] }),
+          async () => { await saveNarrative(caseRef, regime === "MARC" ? "MARC" : "MiCA", text); await appendAudit(user.id, action, caseRef, detail); },
+        );
+      } else {
+        setState((s) => ({ ...s, narratives: apply(s.narratives), audit: [e, ...s.audit] }));
+      }
+    },
+    [entry, user, teamWrite],
+  );
 
   const updateSettings = useCallback(
     (settings: DetectionSettings) => {
-      if (!can(state.role, "edit_settings")) {
+      if (!can(role, "edit_settings")) {
         toast.error("Only Admins can change detection settings");
         return false;
       }
-      setState((s) => ({
-        ...s,
-        settings,
-        audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action: "Settings updated", target: "system", detail: `Alert threshold ${settings.minConfidence}` }, ...s.audit],
-      }));
+      setState((s) => ({ ...s, settings }));
+      log("Settings updated", "system", `Alert threshold ${settings.minConfidence}`);
       return true;
     },
-    [state.role],
+    [role, log],
   );
 
   const resetSettings = useCallback(() => {
@@ -150,22 +240,45 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
       const sc = scenarios.find((x) => x.caseRef === caseRef);
       if (!d || !sc) return null;
       return buildEvidencePackage(d, sc, {
-        role: state.role,
+        role,
         status: statusOf(caseRef),
         generatedAt: new Date(),
         threshold: state.settings.minConfidence,
         cap: CONFIDENCE_CAP,
-        narratives: { marc: state.narratives[`${caseRef}:MARC`], mica: state.narratives[`${caseRef}:MiCA`] },
-        audit: state.audit,
+        narratives: { marc: narratives[`${caseRef}:MARC`], mica: narratives[`${caseRef}:MiCA`] },
+        audit,
       });
     },
-    [detections, scenarios, state, statusOf],
+    [detections, scenarios, role, statusOf, state.settings.minConfidence, narratives, audit],
+  );
+
+  const promoteLive = useCallback(
+    (sc: Scenario) => {
+      const action = "Live lead promoted", detail = `${sc.trades.length} ticks · ${sc.venue.name} · ${sc.live?.alerts.join(", ")}`;
+      const e = entry(action, sc.caseRef, detail);
+      if (user) {
+        teamWrite(
+          (t) => ({ ...t, liveCases: [sc, ...t.liveCases], audit: [e, ...t.audit] }),
+          async () => { await saveLiveCase(sc); await appendAudit(user.id, action, sc.caseRef, detail); },
+        );
+      } else {
+        setState((s) => ({ ...s, liveCases: [sc, ...(s.liveCases ?? [])].slice(0, MAX_LIVE_CASES), audit: [e, ...s.audit] }));
+      }
+    },
+    [entry, user, teamWrite],
   );
 
   const value: Ctx = {
     ready,
-    role: state.role,
-    setRole: (role) => setState((s) => ({ ...s, role })),
+    mode,
+    user,
+    syncing,
+    signOut: async () => { await supabase.auth.signOut(); toast.success("Signed out — back to demo mode"); },
+    role,
+    setRole: (r) => {
+      if (user) { toast.info("Your role is set by a team Admin in Settings"); return; }
+      setState((s) => ({ ...s, role: r }));
+    },
     settings: state.settings,
     updateSettings,
     resetSettings,
@@ -174,18 +287,13 @@ export function ForgeProvider({ children }: { children: ReactNode }) {
     suppressed,
     statusOf,
     setStatus,
-    narrativeOf: (caseRef, regime) => state.narratives[`${caseRef}:${regime}`],
+    narrativeOf: (caseRef, regime) => narratives[`${caseRef}:${regime}`],
     setNarrative,
-    audit: state.audit,
+    audit,
     log,
     scenarioOf,
     buildPackage,
-    promoteLive: (sc) =>
-      setState((s) => ({
-        ...s,
-        liveCases: [sc, ...(s.liveCases ?? [])].slice(0, MAX_LIVE_CASES),
-        audit: [{ id: crypto.randomUUID(), ts: Date.now(), role: s.role, action: "Live lead promoted", target: sc.caseRef, detail: `${sc.trades.length} ticks · ${sc.venue.name} · ${sc.live?.alerts.join(", ")}` }, ...s.audit],
-      })),
+    promoteLive,
   };
 
   return <ForgeContext.Provider value={value}>{children}</ForgeContext.Provider>;

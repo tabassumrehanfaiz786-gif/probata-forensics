@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, Gavel, Network, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck, Scale } from "lucide-react";
+import { Activity, Cloud, FlaskConical, Gavel, LogOut, Network, FolderSearch, LayoutDashboard, ScrollText, Settings2, ShieldCheck, Scale } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ const NAV = [
   { to: "/graph", label: "Intelligence graph", icon: Network, exact: false },
   { to: "/live", label: "Live surveillance", icon: Activity, exact: false },
   { to: "/dossiers", label: "Enforcement dossiers", icon: Gavel, exact: false },
+  { to: "/methodology", label: "Methodology", icon: FlaskConical, exact: false },
   { to: "/audit", label: "Audit log", icon: ScrollText, exact: false },
   { to: "/settings", label: "Settings", icon: Settings2, exact: false },
 ] as const;
@@ -30,7 +31,7 @@ function UtcClock() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { role, setRole, cases, statusOf } = useForge();
+  const { role, setRole, cases, statusOf, user, mode, signOut, syncing } = useForge();
   if (pathname.startsWith("/report/")) return <>{children}</>;
   const open = cases.filter((c) => statusOf(c.caseRef) === "new").length;
 
@@ -66,18 +67,33 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="border-t border-sidebar-border p-4">
-          <div className="label-caps mb-2">Signed in as (demo)</div>
-          <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-            <SelectTrigger className="h-8 bg-background/40 text-xs" aria-label="Switch role">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
-                <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="mt-2 text-[11px] leading-snug text-muted-foreground">Role controls who can escalate, dismiss, export final packages and change settings.</p>
+          {user ? (
+            <>
+              <div className="label-caps mb-1.5">Team workspace</div>
+              <div className="truncate text-xs font-medium" title={user.email ?? ""}>{user.email}</div>
+              <div className="mt-1 flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-primary">{ROLE_LABEL[role]}</span>
+                <button onClick={() => void signOut()} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"><LogOut className="h-3 w-3" />Sign out</button>
+              </div>
+              <p className="mt-2 text-[11px] leading-snug text-muted-foreground">Cases and the audit log are saved to Lovable Cloud and shared with your team. Admins assign roles in Settings.</p>
+            </>
+          ) : (
+            <>
+              <div className="label-caps mb-2">Demo role</div>
+              <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+                <SelectTrigger className="h-8 bg-background/40 text-xs" aria-label="Switch role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+                    <SelectItem key={r} value={r} className="text-xs">{ROLE_LABEL[r]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="mt-2 text-[11px] leading-snug text-muted-foreground">Demo changes stay in this browser.</p>
+              <Link to="/auth" className="mt-2 inline-flex w-full items-center justify-center rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">Sign in to save for the team</Link>
+            </>
+          )}
         </div>
       </aside>
 
@@ -90,9 +106,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex gap-3 text-xs md:hidden">
             {NAV.map((n) => <Link key={n.to} to={n.to} className="text-muted-foreground hover:text-foreground">{n.label}</Link>)}
           </nav>
-          <div className="hidden items-center gap-2 rounded border border-alert/30 bg-alert/10 px-2 py-0.5 md:flex">
+          <div className="hidden items-center gap-2 rounded border border-alert/30 bg-alert/10 px-2 py-0.5 md:flex" title="Pre-loaded cases are a labelled benchmark suite; live cases come from real public trades">
             <Activity className="h-3 w-3 text-alert" />
-            <span className="font-mono text-[10px] uppercase tracking-wider text-alert">Sample replay dataset</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-alert">Benchmark suite + live tape</span>
+          </div>
+          <div className={cn("hidden items-center gap-1.5 rounded border px-2 py-0.5 md:flex", mode === "team" ? "border-success/40 bg-success/10 text-success" : "border-border text-muted-foreground")}>
+            <Cloud className="h-3 w-3" />
+            <span className="font-mono text-[10px] uppercase tracking-wider">{mode === "team" ? (syncing ? "Syncing…" : "Team workspace · saved") : "Demo · this browser only"}</span>
           </div>
           <div className="ml-auto flex items-center gap-4">
             <UtcClock />

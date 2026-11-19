@@ -12,6 +12,7 @@ import { PATTERN_LABEL, ROLE_LABEL } from "@/lib/forge/format";
 import { LEGAL_TEMPLATES } from "@/lib/forge/legal";
 import { can, PERMISSION_MATRIX, type Permission } from "@/lib/forge/permissions";
 import { ALL_VENUES } from "@/lib/forge/scenarios";
+import { TeamRoles } from "@/components/forge/TeamRoles";
 import { useForge } from "@/lib/forge/store";
 import { DEFAULT_SETTINGS, type DetectionSettings, type Role } from "@/lib/forge/types";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ function SettingsPage() {
           <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
           <p className="text-sm text-muted-foreground">Changes re-run every detector immediately and are recorded in the audit log.</p>
         </div>
-        {!editable && <span className="ml-auto inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> Read-only — switch to Admin to edit</span>}
+        {!editable && <span className="ml-auto inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> Read-only — Admin role required</span>}
       </div>
 
       <Panel title="Detection thresholds" action={editable && (
@@ -160,6 +161,7 @@ function SettingsPage() {
           </tbody>
         </table>
       </Panel>
+      <TeamRoles />
     </div>
   );
 }

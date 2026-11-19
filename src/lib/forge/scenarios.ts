@@ -10,7 +10,7 @@ const MIN = 60_000;
 const DAY = 86_400_000;
 const at = (d: number, h: number, m = 0) => Date.UTC(2026, 10, d, h, m, 0);
 
-const VENUES = {
+export const VENUES = {
   binance: { id: "binance", name: "Binance", kind: "CEX", source: "Binance spot WebSocket (trades + depth)" },
   kraken: { id: "kraken", name: "Kraken", kind: "CEX", source: "Kraken WebSocket v2 (trade + book)" },
   coinbase: { id: "coinbase", name: "Coinbase Exchange", kind: "CEX", source: "Coinbase Advanced Trade WS" },
@@ -83,7 +83,7 @@ function base(id: string, caseRef: string, detector: PatternType, pair: string, 
 }
 
 /* ---------------------------------------------------------------- wash: CEX self-crossing */
-function washCex(seed: number, o: {
+export function washCex(seed: number, o: {
   id: string; caseRef: string; pair: string; venue: Venue; day: number; hour: number; status: CaseStatus; assignee: string;
   cluster: number; washPairs: number; organicN: number; p0: number; crossShare: number; lots: number[];
 }): Scenario {
@@ -180,7 +180,7 @@ function benignMaker(seed: number): Scenario {
 }
 
 /* ---------------------------------------------------------------- spoofing */
-function spoof(seed: number, o: {
+export function spoof(seed: number, o: {
   id: string; caseRef: string; pair: string; venue: Venue; day: number; hour: number; status: CaseStatus; assignee: string;
   spoofSide: "ask" | "bid"; cycles: number; p0: number; spoofMult: [number, number]; lifeMs: [number, number]; benign?: boolean;
 }): Scenario {
@@ -274,7 +274,7 @@ function spoof(seed: number, o: {
 }
 
 /* ---------------------------------------------------------------- coordinated pump */
-function pump(seed: number, o: {
+export function pump(seed: number, o: {
   id: string; caseRef: string; pair: string; venue: Venue; day: number; hour: number; status: CaseStatus; assignee: string;
   sol?: boolean; cohort: number; buysEach: [number, number]; lot: number; dumpShare: number; social?: SocialSignal[] | "auto"; fomo: number; organicSpread: number;
 }): Scenario {

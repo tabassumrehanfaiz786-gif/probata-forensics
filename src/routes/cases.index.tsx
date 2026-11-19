@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { ConfidenceBadge, PatternTag, StatusBadge } from "@/components/forge/badges";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { casesCsv, download } from "@/lib/forge/export";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { fmtDate, fmtDuration, fmtHm, PATTERN_LABEL, STATUS_LABEL } from "@/lib/forge/format";
@@ -26,7 +28,7 @@ export const Route = createFileRoute("/cases/")({
 });
 
 function CaseLibrary() {
-  const { detections, statusOf } = useForge();
+  const { detections, statusOf, log, narrativeOf } = useForge();
   const [q, setQ] = useState("");
   const [pattern, setPattern] = useState<"all" | PatternType>("all");
   const [status, setStatus] = useState<"all" | CaseStatus>("all");
@@ -70,6 +72,12 @@ function CaseLibrary() {
         <label className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
           <Switch checked={showSuppressed} onCheckedChange={setShowSuppressed} /> Show suppressed
         </label>
+        <Button variant="outline" size="sm" onClick={() => { download(`probata-cases-${new Date().toISOString().slice(0, 10)}.csv`, casesCsv(rows, statusOf), "text/csv"); log("Case list exported (CSV)", "cases", `${rows.length} cases`); }}><Download className="h-3.5 w-3.5" />CSV</Button>
+        <Button variant="outline" size="sm" onClick={() => {
+          const body = rows.map((d) => ({ caseRef: d.caseRef, pattern: d.pattern, pair: d.pair, venue: d.venue, status: statusOf(d.caseRef), confidence: d.confidence, window: { start: new Date(d.window.start).toISOString(), end: new Date(d.window.end).toISOString() }, factors: d.factors, limitations: d.limitations, narratives: { marc: narrativeOf(d.caseRef, "MARC") ?? null, mica: narrativeOf(d.caseRef, "MiCA") ?? null }, detectorVersion: d.detectorVersion }));
+          download(`probata-cases-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(body, null, 2), "application/json");
+          log("Case list exported (JSON)", "cases", `${rows.length} cases`);
+        }}><Download className="h-3.5 w-3.5" />JSON</Button>
       </div>
 
       <div className="overflow-x-auto rounded-md border border-border bg-card">

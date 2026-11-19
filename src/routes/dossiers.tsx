@@ -27,16 +27,16 @@ function Dossiers() {
       </header>
       <div className="grid gap-4 lg:grid-cols-2">
         {DOSSIERS.map((d) => (
-          <article key={d.id} className="space-y-3 rounded-lg border border-border bg-card p-5">
+          <article key={d.id} id={d.id} className="space-y-3 rounded-lg border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-lg font-semibold">{d.title}</h2>
               <span className="font-mono text-xs text-muted-foreground">{d.year}</span>
             </div>
             <p className="text-sm text-muted-foreground">{d.typology} · {d.jurisdiction}</p>
-            <ul className="list-disc space-y-1 pl-5 text-sm">{d.facts.map((f) => <li key={f}>{f}</li>)}</ul>
+            <ul className="list-disc space-y-1.5 pl-5 text-sm">{d.facts.map((f) => <li key={f.text}>{f.text} <a href={f.source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-xs text-primary hover:underline">[{f.source.label}{f.source.pin ? `, ${f.source.pin}` : ""}]<ExternalLink className="h-3 w-3" /></a></li>)}</ul>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Proceedings</div>
-              <ul className="mt-1 space-y-1 text-sm">{d.proceedings.map((p) => <li key={p.forum}><span className="font-medium">{p.forum}:</span> {p.outcome}</li>)}</ul>
+              <ul className="mt-1 space-y-1 text-sm">{d.proceedings.map((p) => <li key={p.forum}><span className="font-medium">{p.forum}:</span> {p.outcome} <a href={p.source.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-xs text-primary hover:underline">[{p.source.label}]<ExternalLink className="h-3 w-3" /></a></li>)}</ul>
             </div>
             <div className="grid gap-2 text-xs sm:grid-cols-2">
               <div className="rounded border border-border p-2"><span className="font-mono text-primary">UK MAR</span><p className="mt-1">{d.ukMar}</p></div>
@@ -44,7 +44,7 @@ function Dossiers() {
             </div>
             <p className="text-sm italic">{d.lesson}</p>
             <div className="flex flex-wrap gap-3 text-xs">
-              {d.sources.map((s) => <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">{s.label}<ExternalLink className="h-3 w-3" /></a>)}
+              {d.law.map((s) => <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">{s.label}<ExternalLink className="h-3 w-3" /></a>)}
             </div>
           </article>
         ))}

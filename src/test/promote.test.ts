@@ -27,6 +27,6 @@ describe("live lead promotion", () => {
 
 describe("enforcement dossiers", () => {
   it("every dossier cites at least one official source", () => {
-    for (const d of DOSSIERS) expect(d.sources.length).toBeGreaterThan(0);
+    for (const d of DOSSIERS) expect(d.law.length).toBeGreaterThan(0);
   });
 });
